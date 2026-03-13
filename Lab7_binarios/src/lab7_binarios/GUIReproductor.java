@@ -39,6 +39,7 @@ public class GUIReproductor extends JFrame {
         reproductor=new ReproductorMP3();
         imagenDefault=cargarImagenDefault();
         crearCarpetaCanciones();
+        migrarRutasAbsolutas();
         initComponents();
         refrescarTabla();
     }
@@ -47,6 +48,21 @@ public class GUIReproductor extends JFrame {
         if(!carpeta.exists()) {
             carpeta.mkdirs();
         }
+    }
+    private void migrarRutasAbsolutas() {
+        try {
+            Cancion[] canciones=archivoCanciones.leerTodos();
+            for(Cancion c : canciones) {
+                String ruta=c.getRutaMP3();
+                if(ruta==null||ruta.isEmpty()) continue;
+                boolean esAbsoluta=ruta.contains(":\\") || ruta.startsWith("/Users/") || ruta.startsWith("/home/");
+                if(esAbsoluta) {
+                    String nombreArchivo=new File(ruta).getName();
+                    String rutaRelativa=CARPETA_CANCIONES+"/"+nombreArchivo;
+                    archivoCanciones.actualizarRutaMP3(c.getId(),rutaRelativa);
+                }
+            }
+        } catch(IOException e) {}
     }
     private String copiarMP3AlProyecto(String rutaOriginal) throws IOException {
         File origen=new File(rutaOriginal);
@@ -58,10 +74,14 @@ public class GUIReproductor extends JFrame {
         return CARPETA_CANCIONES+"/"+origen.getName();
     }
     private File resolverRutaMP3(String rutaGuardada) {
+        if(rutaGuardada==null||rutaGuardada.isEmpty()) return new File("");
         File f=new File(rutaGuardada);
         if(f.isAbsolute()&&f.exists()) return f;
         File relativa=new File(System.getProperty("user.dir"),rutaGuardada);
         if(relativa.exists()) return relativa;
+        String nombreArchivo=new File(rutaGuardada).getName();
+        File enCanciones=new File(System.getProperty("user.dir"),CARPETA_CANCIONES+"/"+nombreArchivo);
+        if(enCanciones.exists()) return enCanciones;
         return f;
     }
     private ImageIcon cargarImagenDefault() {
@@ -114,7 +134,7 @@ public class GUIReproductor extends JFrame {
         lblImagen.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblImagen.setBorder(BorderFactory.createLineBorder(Color.GRAY,1));
         lblImagen.setBackground(Color.WHITE);
-        lblImagen.setOpaque(true); 
+        lblImagen.setOpaque(true);
         lblNombre=new JLabel("Sin selección",JLabel.CENTER);
         lblNombre.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblNombre.setFont(new Font("Arial",Font.BOLD,12));
@@ -219,7 +239,7 @@ public class GUIReproductor extends JFrame {
         }
         File f=resolverRutaMP3(cancionSeleccionada.getRutaMP3());
         if(!f.exists()) {
-            JOptionPane.showMessageDialog(this,"Archivo MP3 no encontrado:\n"+f.getAbsolutePath());
+            JOptionPane.showMessageDialog(this,"Archivo MP3 no encontrado:\n"+f.getAbsolutePath()+"\n\nAsegúrate de que el archivo esté en la carpeta 'canciones' del proyecto.");
             return;
         }
         reproductor.play(f.getAbsolutePath());
@@ -325,7 +345,6 @@ public class GUIReproductor extends JFrame {
         panelImagen.setBackground(new Color(240,240,240));
         panelImagen.add(txtImagen,BorderLayout.CENTER);
         panelImagen.add(btnElegirImagen,BorderLayout.EAST);
- 
         gbc.gridx=0; gbc.gridy=0; gbc.weightx=0.35;
         panelCampos.add(lArchivo,gbc);
         gbc.gridx=1; gbc.weightx=0.65;
