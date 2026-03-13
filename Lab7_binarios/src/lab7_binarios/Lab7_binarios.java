@@ -5,6 +5,8 @@
  */
 package lab7_binarios;
 
+import javax.swing.SwingUtilities;
+
 /**
  *
  * @author andres
@@ -15,7 +17,9 @@ public class Lab7_binarios {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        SwingUtilities.invokeLater(()->{
+            new GUIReproductor().setVisible(true);
+        });
     }
     
 }
